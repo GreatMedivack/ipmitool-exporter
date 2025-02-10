@@ -96,28 +96,19 @@ func (c *IPMICollector) collectSensorData() {
         return
     }
 
-    // Add debug output
-    log.Printf("Raw ipmitool output:\n%s", string(out))
-
     for _, line := range strings.Split(string(out), "\n") {
         if line == "" {
             continue
         }
-
-        // Add debug output for each line
-        log.Printf("Processing line: %s", line)
 
         fields := strings.Split(line, "|")
         if len(fields) < 3 {
             continue
         }
 
-        // Trim spaces from fields
         sensorName := strings.TrimSpace(fields[0])
         reading := strings.TrimSpace(fields[1])
         status := strings.TrimSpace(fields[2])
-
-        log.Printf("Parsed fields - Name: %s, Reading: %s, Status: %s", sensorName, reading, status)
 
         switch {
         case strings.Contains(line, "Fan"):
@@ -143,7 +134,6 @@ func (c *IPMICollector) collectSensorData() {
 
 func statusToMetric(status string) float64 {
     status = strings.ToLower(strings.TrimSpace(status))
-    log.Printf("Converting status: '%s' to metric", status)
     if status == "ok" || status == "nominal" || status == "ns" {
         return 1
     }
@@ -159,8 +149,6 @@ func (c *IPMICollector) collectSELData() {
 
     lines := strings.Split(string(out), "\n")
     c.selTotal.Set(float64(len(lines) - 1))
-
-    // Reset all previous values
     c.selStatus.Reset()
 
     for _, line := range lines {
@@ -180,15 +168,10 @@ func (c *IPMICollector) collectSELData() {
             description = strings.TrimSpace(fields[5])
         }
 
-        log.Printf("Processing SEL entry: Type='%s', State='%s', Description='%s'", 
-            eventType, state, description)
-
-        // Set value for all events
         value := 1.0
         if isCriticalCondition(eventType, description) && strings.Contains(strings.ToLower(state), "deasserted") {
             value = 0.0
         }
-        // Always set the metric regardless of condition
         c.selStatus.WithLabelValues(eventType, description).Set(value)
     }
 }
@@ -198,7 +181,7 @@ func isCriticalCondition(eventType, description string) bool {
     descLower := strings.ToLower(description)
 
     criticalConditions := []string{
-        "power off/down",    // More specific power condition
+        "power off/down",
         "critical",
         "failure",
         "error",
@@ -208,8 +191,6 @@ func isCriticalCondition(eventType, description string) bool {
 
     for _, condition := range criticalConditions {
         if strings.Contains(eventLower+" "+descLower, condition) {
-            log.Printf("Critical condition detected: Event='%s', Description='%s'", 
-                eventType, description)
             return true
         }
     }
