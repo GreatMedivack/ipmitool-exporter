@@ -17,30 +17,30 @@ A Prometheus exporter for IPMI metrics that uses `ipmitool` to collect data from
 
 ```bash
 docker run -d \
-  --name ipmi-exporter \
+  --name ipmitool-exporter \
   --privileged \
   -p 9290:9290 \
-  greatmedivack/ipmi-exporter:latest
+  greatmedivack/ipmitool-exporter:latest
 ```
 
 ### Systemd 
 
 Copy binary:
 ```bash
-wget https://github.com/GreatMedivack/ipmitool-exporter/releases/download/v1.0.0/ipmi-exporter-linux-amd64 -o ipmitool-exporter 
-sudo cp ipmi-exporter /usr/local/bin/
-sudo chmod 755 /usr/local/bin/ipmi-exporter
+wget https://github.com/GreatMedivack/ipmitool-exporter/releases/download/v1.0.0/ipmitool-exporter-linux-amd64 -o ipmitool-exporter 
+sudo cp ipmitool-exporter /usr/local/bin/
+sudo chmod 755 /usr/local/bin/ipmitool-exporter
 ```
 Install service:
 ```bash
-sudo cp etc/systemd/system/ipmi-exporter.service /etc/systemd/system/
+sudo cp etc/systemd/system/ipmitool-exporter.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable ipmi-exporter
-sudo systemctl start ipmi-exporter
+sudo systemctl enable ipmitool-exporter
+sudo systemctl start ipmitool-exporter
 ```
 Check service status:
 ```bash
-sudo systemctl status ipmi-exporter
+sudo systemctl status ipmitool-exporter
 ```
 
 ### Usage
