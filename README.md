@@ -27,9 +27,9 @@ docker run -d \
 
 Copy binary:
 ```bash
-wget https://github.com/GreatMedivack/ipmitool-exporter/releases/download/v1.0.0/ipmitool-exporter-linux-amd64 -o ipmitool-exporter 
-sudo cp ipmitool-exporter /usr/local/bin/
-sudo chmod 755 /usr/local/bin/ipmitool-exporter
+curl -L -o ipmitool-exporter https://github.com/GreatMedivack/ipmitool-exporter/releases/download/v1.0.0/ipmitool-exporter-linux-amd64
+sudo cp ipmitool-exporter /usr/sbin/
+sudo chmod 755 /usr/sbin/ipmitool-exporter
 ```
 Install service:
 ```bash
