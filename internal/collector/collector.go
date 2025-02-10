@@ -158,32 +158,61 @@ func (c *IPMICollector) collectSELData() {
     }
 
     lines := strings.Split(string(out), "\n")
-    c.selTotal.Set(float64(len(lines) - 1)) // -1 for empty last line
+    c.selTotal.Set(float64(len(lines) - 1))
+
+    // Reset all previous values
+    c.selStatus.Reset()
 
     for _, line := range lines {
         if line == "" {
             continue
         }
 
-        fields := strings.Fields(line)
-        if len(fields) < 4 {
+        fields := strings.Split(line, "|")
+        if len(fields) < 5 {
             continue
         }
 
-        // Parse SEL entry
-        // Format: 1 | 01/01/1970 | 00:00:00 | System Event #0x01 | Critical | ...
-        eventType := fields[3]
-        severity := fields[4]
-        sensor := "unknown"
+        eventType := strings.TrimSpace(fields[3])
+        state := strings.TrimSpace(fields[4])
+        description := ""
         if len(fields) > 5 {
-            sensor = fields[5]
+            description = strings.TrimSpace(fields[5])
         }
 
-        // Set metric based on severity
+        log.Printf("Processing SEL entry: Type='%s', State='%s', Description='%s'", 
+            eventType, state, description)
+
+        // Set value for all events
         value := 1.0
-        if strings.ToLower(severity) == "critical" {
+        if isCriticalCondition(eventType, description) && strings.Contains(strings.ToLower(state), "deasserted") {
             value = 0.0
         }
-        c.selStatus.WithLabelValues(eventType, sensor).Set(value)
+        // Always set the metric regardless of condition
+        c.selStatus.WithLabelValues(eventType, description).Set(value)
     }
+}
+
+func isCriticalCondition(eventType, description string) bool {
+    eventLower := strings.ToLower(eventType)
+    descLower := strings.ToLower(description)
+
+    criticalConditions := []string{
+        "power off/down",    // More specific power condition
+        "critical",
+        "failure",
+        "error",
+        "temperature out of range",
+        "voltage out of range",
+    }
+
+    for _, condition := range criticalConditions {
+        if strings.Contains(eventLower+" "+descLower, condition) {
+            log.Printf("Critical condition detected: Event='%s', Description='%s'", 
+                eventType, description)
+            return true
+        }
+    }
+
+    return false
 }
